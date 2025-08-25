@@ -49,7 +49,7 @@ export function UserView() {
         }}
       >
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
-          Users
+          Fromage
         </Typography>
         <Button
           variant="contained"

@@ -34,11 +34,6 @@ export const navData = [
     ),
   },
   {
-    title: 'Blog',
-    path: '/blog',
-    icon: icon('ic-blog'),
-  },
-  {
     title: 'Sign in',
     path: '/sign-in',
     icon: icon('ic-lock'),

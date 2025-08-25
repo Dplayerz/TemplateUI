@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
@@ -12,15 +13,31 @@ import { AnalyticsWebsiteVisits } from '../analytics-website-visits';
 import { AnalyticsWidgetSummary } from '../analytics-widget-summary';
 import { AnalyticsTrafficBySite } from '../analytics-traffic-by-site';
 import { AnalyticsCurrentSubject } from '../analytics-current-subject';
+
+
 import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 // ----------------------------------------------------------------------
 
 export function OverviewAnalyticsView() {
+
+   const [chartData, setChartData] = useState({ id_hex: [], timestamp: [] });
+  
+
+   useEffect(() => {
+  fetch('http://127.0.0.1:8000/test')
+    .then(res => res.json())
+    .then(data => {
+      console.log(data); // See what you get here!
+      setChartData(data);
+    });
+}, []);
+  
   return (
+
     <DashboardContent maxWidth="xl">
       <Typography variant="h4" sx={{ mb: { xs: 3, md: 5 } }}>
-        Hi, Welcome back 👋
+        Bonjour 👋
       </Typography>
 
       <Grid container spacing={3}>
@@ -32,7 +49,7 @@ export function OverviewAnalyticsView() {
             icon={<img alt="Weekly sales" src="/assets/icons/glass/ic-glass-bag.svg" />}
             chart={{
               categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 8, 35, 50, 82, 84, 77, 12],
+              series: [22, 90, 35, 50, 82, 84, 77, 12],
             }}
           />
         </Grid>
