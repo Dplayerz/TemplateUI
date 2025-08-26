@@ -71,7 +71,7 @@ useEffect(() => {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="Weekly sales"
+            title="Monthly sales"
             percent={2.6}
             total={3}
             icon={<img alt="Weekly sales" src="/assets/icons/glass/ic-glass-bag.svg" />}
@@ -81,7 +81,7 @@ useEffect(() => {
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <AnalyticsWidgetSummary
-            title="New users"
+            title="Total Stocks$"
             percent={-0.1}
             total={1352831}
             color="secondary"
