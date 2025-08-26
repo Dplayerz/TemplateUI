@@ -21,17 +21,45 @@ import { AnalyticsConversionRates } from '../analytics-conversion-rates';
 
 export function OverviewAnalyticsView() {
 
-   const [chartData, setChartData] = useState({ id_hex: [], timestamp: [] });
+   const [chartData, setChartData] = useState<{ month_name: string[]; sales: number[] }>({ month_name: [], sales: [] });
+    const [loading, setLoading] = useState(true);
+     const [total, setTotalSales] = useState(0);
   
 
-   useEffect(() => {
+ useEffect(() => {
   fetch('http://127.0.0.1:8000/test')
     .then(res => res.json())
-    .then(data => {
-      console.log(data); // See what you get here!
-      setChartData(data);
+    .then((data: { month_name: string; sales: number }[]) => {
+      // data is an array of objects
+      const month_name = data.map((item) => item.month_name);
+      const sales = data.map((item) => item.sales);
+      setChartData({ month_name, sales });
+      setLoading(false);
     });
 }, []);
+
+useEffect(() => {
+    fetch("http://127.0.0.1:8000/test_total_sales")
+      .then((res) => res.json())
+      .then((data: { total_sales: number }) => {
+        setTotalSales(data.total_sales);
+        setLoading(false);
+        console.log(total);
+      })
+      .catch((error) => {
+        console.error("Error fetching total sales:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  // Prepare chart data for the widget
+   const widgetChart = {
+    categories: chartData.month_name,
+    series: chartData.sales,
+     // <-- Just the array of numbers
+  };
+  
+
   
   return (
 
@@ -45,12 +73,9 @@ export function OverviewAnalyticsView() {
           <AnalyticsWidgetSummary
             title="Weekly sales"
             percent={2.6}
-            total={714000}
+            total={3}
             icon={<img alt="Weekly sales" src="/assets/icons/glass/ic-glass-bag.svg" />}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [22, 90, 35, 50, 82, 84, 77, 12],
-            }}
+            chart={widgetChart}
           />
         </Grid>
 
