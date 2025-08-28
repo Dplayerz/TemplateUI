@@ -30,22 +30,29 @@ export function UserView() {
   const table = useTable();
 
   const [filterName, setFilterName] = useState('');
-  const [users, setUsers] = useState<UserProps[]>([]);
+const [users, setUsers] = useState<UserProps[]>([]);
 
-  // Fetch users from your API
-  useEffect(() => {
-    fetch('http://localhost:8000/tools') // <-- your API endpoint
-      .then(res => res.json())
-      .then(data => setUsers(data));
-  }, []);
+// Fetch users from your API every 5 seconds
+useEffect(() => {
+  const fetchUsers = () => {
+    fetch("http://localhost:8000/tools")
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Fetch error:", err));
+  };
 
-  const dataFiltered: UserProps[] = applyFilter({
-    inputData: users, // <-- use fetched users here
-    comparator: getComparator(table.order, table.orderBy),
-    filterName,
-  });
+  fetchUsers(); // initial fetch
+  const interval = setInterval(fetchUsers, 1000); // refresh every 5 sec
 
-  const notFound = !dataFiltered.length && !!filterName;
+  return () => clearInterval(interval); // cleanup
+}, []);
+
+// Filter and sort users
+const dataFiltered = applyFilter({
+  inputData: users,
+  comparator: getComparator(table.order, table.orderBy),
+  filterName,
+});
 
 return (
   <DashboardContent>
@@ -91,7 +98,6 @@ return (
                 )}
               />
 
-              {notFound && <TableNoData searchQuery={''} />}
             </TableBody>
           </Table>
         </TableContainer>

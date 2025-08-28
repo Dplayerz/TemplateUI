@@ -23,7 +23,7 @@ export function OverviewAnalyticsView() {
 
    const [chartData, setChartData] = useState<{ month_name: string[]; sales: number[] }>({ month_name: [], sales: [] });
     const [loading, setLoading] = useState(true);
-     const [total, setTotalSales] = useState(0);
+     const [totalSales, setTotalSales] = useState(0);
   
 
  useEffect(() => {
@@ -42,13 +42,11 @@ useEffect(() => {
     fetch("http://127.0.0.1:8000/test_total_sales")
       .then((res) => res.json())
       .then((data: { total_sales: number }) => {
-        setTotalSales(data.total_sales);
-        setLoading(false);
-        console.log(total);
+        setTotalSales(data.total_sales); 
+        console.log("Total sales fetched:", data.total_sales);
       })
       .catch((error) => {
         console.error("Error fetching total sales:", error);
-        setLoading(false);
       });
   }, []);
 
@@ -73,7 +71,7 @@ useEffect(() => {
           <AnalyticsWidgetSummary
             title="Monthly sales"
             percent={2.6}
-            total={3}
+            total={totalSales}
             icon={<img alt="Weekly sales" src="/assets/icons/glass/ic-glass-bag.svg" />}
             chart={widgetChart}
           />
