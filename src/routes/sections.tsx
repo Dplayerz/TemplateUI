@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 
+
 import { lazy, Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { varAlpha } from 'minimal-shared/utils';
@@ -9,7 +10,7 @@ import LinearProgress, { linearProgressClasses } from '@mui/material/LinearProgr
 
 import { AuthLayout } from 'src/layouts/auth';
 import { DashboardLayout } from 'src/layouts/dashboard';
-
+import { PrivateRoute } from './privateRoutes';
 // ----------------------------------------------------------------------
 
 export const DashboardPage = lazy(() => import('src/pages/dashboard'));
@@ -41,11 +42,13 @@ const renderFallback = () => (
 export const routesSection: RouteObject[] = [
   {
     element: (
+    <PrivateRoute>
       <DashboardLayout>
         <Suspense fallback={renderFallback()}>
           <Outlet />
         </Suspense>
       </DashboardLayout>
+    </PrivateRoute>
     ),
     children: [
       { index: true, element: <DashboardPage /> },

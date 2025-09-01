@@ -1,4 +1,7 @@
 import { useState, useCallback } from 'react';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+ 
 
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
@@ -10,8 +13,12 @@ import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 
 import { useRouter } from 'src/routes/hooks';
+import { auth } from 'src/firebase';
+
 
 import { Iconify } from 'src/components/iconify';
+
+
 
 // ----------------------------------------------------------------------
 
@@ -19,10 +26,30 @@ export function SignInView() {
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSignIn = useCallback(() => {
+  const handleSignIn = useCallback(async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/'); // redirect after successful login
+    } catch (err) {
+      console.error(err);
+      setError("Invalid email or password");
+    }
+  }, [email, password, router]);
+
+  const handleGoogleSignIn = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
     router.push('/');
-  }, [router]);
+  } catch (err) {
+    console.error(err);
+    setError("Google sign-in failed");
+  }
+};
 
   const renderForm = (
     <Box
@@ -36,22 +63,20 @@ export function SignInView() {
         fullWidth
         name="email"
         label="Email address"
-        defaultValue="hello@gmail.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
         sx={{ mb: 3 }}
         slotProps={{
           inputLabel: { shrink: true },
         }}
       />
 
-      <Link variant="body2" color="inherit" sx={{ mb: 1.5 }}>
-        Forgot password?
-      </Link>
-
       <TextField
         fullWidth
         name="password"
         label="Password"
-        defaultValue="@demo1234"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         type={showPassword ? 'text' : 'password'}
         slotProps={{
           inputLabel: { shrink: true },
@@ -67,6 +92,12 @@ export function SignInView() {
         }}
         sx={{ mb: 3 }}
       />
+
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>
+          {error}
+        </Typography>
+      )}
 
       <Button
         fullWidth
@@ -93,17 +124,7 @@ export function SignInView() {
         }}
       >
         <Typography variant="h5">Sign in</Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color: 'text.secondary',
-          }}
-        >
-          Don’t have an account?
-          <Link variant="subtitle2" sx={{ ml: 0.5 }}>
-            Get started
-          </Link>
-        </Typography>
+        
       </Box>
       {renderForm}
       <Divider sx={{ my: 3, '&::before, &::after': { borderTopStyle: 'dashed' } }}>
@@ -115,22 +136,19 @@ export function SignInView() {
         </Typography>
       </Divider>
       <Box
-        sx={{
-          gap: 1,
-          display: 'flex',
-          justifyContent: 'center',
-        }}
-      >
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:google" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:github" />
-        </IconButton>
-        <IconButton color="inherit">
-          <Iconify width={22} icon="socials:twitter" />
-        </IconButton>
-      </Box>
+  sx={{
+    gap: 1,
+    display: 'flex',
+    justifyContent: 'center',
+  }}
+>
+  <IconButton color="inherit" onClick={handleGoogleSignIn}>
+    <Iconify width={22} icon="socials:google" />
+  </IconButton>
+  <IconButton color="inherit" disabled>
+    <Iconify width={22} icon="socials:twitter" />
+  </IconButton>
+</Box>
     </>
   );
 }

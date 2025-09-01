@@ -1,5 +1,6 @@
 import 'src/global.css';
 
+
 import { useEffect } from 'react';
 
 import Fab from '@mui/material/Fab';
@@ -8,7 +9,10 @@ import { usePathname } from 'src/routes/hooks';
 
 import { ThemeProvider } from 'src/theme/theme-provider';
 
+
 import { Iconify } from 'src/components/iconify';
+import { AuthProvider } from './authContex';
+
 
 // ----------------------------------------------------------------------
 
@@ -39,10 +43,13 @@ export default function App({ children }: AppProps) {
   ); */
 
   return (
+  <AuthProvider>
     <ThemeProvider>
       {children}
       {/* {githubButton()} */} {/* Uncomment this line to enable the GitHub button, i'll come back later - Pepper */}
     </ThemeProvider>
+  </AuthProvider>
+  
   );
 }
 
