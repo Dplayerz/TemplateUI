@@ -32,25 +32,39 @@ export function UserView() {
   const [filterName, setFilterName] = useState('');
 const [users, setUsers] = useState<UserProps[]>([]);
 
-// Fetch users from your API every 5 seconds
 useEffect(() => {
   const fetchUsers = () => {
     fetch("http://localhost:8000/tools")
       .then((res) => res.json())
-      .then((data) => setUsers(data))
+      .then((data) => {
+        // Sort so that 'OUT' tools come first
+        const sortedData = data.sort((a: UserProps, b: UserProps) => {
+          if (a.status === 'OUT' && b.status !== 'OUT') return -1;
+          if (a.status !== 'OUT' && b.status === 'OUT') return 1;
+          return 0; // keep original order for others
+        });
+        setUsers(sortedData);
+      })
       .catch((err) => console.error("Fetch error:", err));
   };
 
   fetchUsers(); // initial fetch
-  const interval = setInterval(fetchUsers, 1000); // refresh every 5 sec
+  const interval = setInterval(fetchUsers, 5000); // refresh every 5 sec
 
-  return () => clearInterval(interval); // cleanup
+  return () => clearInterval(interval);
 }, []);
 
 // Filter and sort users
 const dataFiltered = applyFilter({
   inputData: users,
-  comparator: getComparator(table.order, table.orderBy),
+  comparator: (a, b) => {
+    // First, push OUT items to the top
+    if (a.status === 'OUT' && b.status !== 'OUT') return -1;
+    if (a.status !== 'OUT' && b.status === 'OUT') return 1;
+
+    // Then, use existing comparator (e.g., sort by table order)
+    return getComparator(table.order, table.orderBy)(a, b);
+  },
   filterName,
 });
 
