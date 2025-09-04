@@ -3,16 +3,11 @@ import { useState, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
 import TableBody from '@mui/material/TableBody';
-import Typography from '@mui/material/Typography';
 import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 
-import { _users } from 'src/_mock';
 import { DashboardContent } from 'src/layouts/dashboard';
-
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 
 import { TableNoData } from '../table-no-data';
@@ -30,105 +25,178 @@ export function UserView() {
   const table = useTable();
 
   const [filterName, setFilterName] = useState('');
-const [users, setUsers] = useState<UserProps[]>([]);
+  const [users, setUsers] = useState<UserProps[]>([]);
 
-useEffect(() => {
-  const fetchUsers = () => {
-    fetch("http://localhost:8000/tools")
-      .then((res) => res.json())
-      .then((data) => {
-        // Sort so that 'OUT' tools come first
-        const sortedData = data.sort((a: UserProps, b: UserProps) => {
-          if (a.status === 'OUT' && b.status !== 'OUT') return -1;
-          if (a.status !== 'OUT' && b.status === 'OUT') return 1;
-          return 0; // keep original order for others
-        });
-        setUsers(sortedData);
-      })
-      .catch((err) => console.error("Fetch error:", err));
-  };
+  useEffect(() => {
+    const fetchUsers = () => {
+      fetch('http://localhost:8000/tools')
+        .then((res) => res.json())
+        .then((data) => setUsers(data))
+        .catch((err) => console.error('Fetch error:', err));
+    };
 
-  fetchUsers(); // initial fetch
-  const interval = setInterval(fetchUsers, 5000); // refresh every 5 sec
+    fetchUsers();
+    const interval = setInterval(fetchUsers, 5000);
 
-  return () => clearInterval(interval);
-}, []);
+    return () => clearInterval(interval);
+  }, []);
 
-// Filter and sort users
-const dataFiltered = applyFilter({
-  inputData: users,
-  comparator: (a, b) => {
-    // First, push OUT items to the top
-    if (a.status === 'OUT' && b.status !== 'OUT') return -1;
-    if (a.status !== 'OUT' && b.status === 'OUT') return 1;
+  // Split into IN and OUT
+  const inFiltered = applyFilter({
+    inputData: users.filter((u) => u.status === 'IN'),
+    comparator: getComparator(table.order, table.orderBy),
+    filterName,
+  });
 
-    // Then, use existing comparator (e.g., sort by table order)
-    return getComparator(table.order, table.orderBy)(a, b);
-  },
-  filterName,
-});
+  const outFiltered = applyFilter({
+    inputData: users.filter((u) => u.status === 'OUT'),
+    comparator: getComparator(table.order, table.orderBy),
+    filterName,
+  });
 
-return (
-  <DashboardContent>
-    <Card>
-      <UserTableToolbar
-        filterName={filterName}
-        onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => setFilterName(event.target.value)} numSelected={0}      />
+  return (
+    <DashboardContent>
+      {/* OUT table */}
+      <Card sx={{ mb: 3 }}>
+        <UserTableToolbar
+          filterName={filterName}
+          onFilterName={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFilterName(e.target.value)
+          }
+          numSelected={0}
+        />
 
-      <Scrollbar>
-        <TableContainer sx={{ minWidth: 800, position: 'relative' }}>
-          <Table>
-            <UserTableHead
-              order={table.order}
-              orderBy={table.orderBy}
-              rowCount={dataFiltered.length}
-              numSelected={table.selected.length}
-              onSort={table.onSort}
-              onSelectAllRows={(checked) => table.onSelectAllRows(
-                checked,
-                dataFiltered.map((row) => row.id)
-              )} headLabel={[]}            />
-            <TableBody>
-              {dataFiltered
-                .slice(
-                  table.page * table.rowsPerPage,
-                  table.page * table.rowsPerPage + table.rowsPerPage
-                )
-                .map((row) => (
-                  <UserTableRow
-                    key={row.id}
-                    row={row}
-                    selected={table.selected.includes(row.id)}
-                    onSelectRow={() => table.onSelectRow(row.id)}
-                  />
-                ))}
-
-              <TableEmptyRows
-                height={77}
-                emptyRows={emptyRows(
-                  table.page,
-                  table.rowsPerPage,
-                  dataFiltered.length
-                )}
+        <Scrollbar>
+          <TableContainer sx={{ minWidth: 800, position: 'relative' }}>
+            <Table>
+              <UserTableHead
+                order={table.order}
+                orderBy={table.orderBy}
+                rowCount={outFiltered.length}
+                numSelected={table.selected.length}
+                onSort={table.onSort}
+                onSelectAllRows={(checked) =>
+                  table.onSelectAllRows(
+                    checked,
+                    outFiltered.map((row) => row.id)
+                  )
+                }
+                headLabel={[]}
               />
+              <TableBody>
+                {outFiltered
+                  .slice(
+                    table.page * table.rowsPerPage,
+                    table.page * table.rowsPerPage + table.rowsPerPage
+                  )
+                  .map((row) => (
+                    <UserTableRow
+                      key={row.id}
+                      row={row}
+                      selected={table.selected.includes(row.id)}
+                      onSelectRow={() => table.onSelectRow(row.id)}
+                    />
+                  ))}
 
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Scrollbar>
+                <TableEmptyRows
+                  height={77}
+                  emptyRows={emptyRows(
+                    table.page,
+                    table.rowsPerPage,
+                    outFiltered.length
+                  )}
+                />
 
-      <TablePagination
-        page={table.page}
-        component="div"
-        count={dataFiltered.length}
-        rowsPerPage={table.rowsPerPage}
-        onPageChange={table.onChangePage}
-        rowsPerPageOptions={[5, 10, 25]}
-        onRowsPerPageChange={table.onChangeRowsPerPage}
-      />
-    </Card>
-  </DashboardContent>
-);
+                {outFiltered.length === 0 && (
+                  <TableNoData searchQuery={filterName} />
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Scrollbar>
+
+        <TablePagination
+          page={table.page}
+          component="div"
+          count={outFiltered.length}
+          rowsPerPage={table.rowsPerPage}
+          onPageChange={table.onChangePage}
+          rowsPerPageOptions={[5, 10, 25]}
+          onRowsPerPageChange={table.onChangeRowsPerPage}
+        />
+      </Card>
+
+      {/* IN table */}
+      <Card>
+        <UserTableToolbar
+          filterName={filterName}
+          onFilterName={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setFilterName(e.target.value)
+          }
+          numSelected={0}
+        />
+
+        <Scrollbar>
+          <TableContainer sx={{ minWidth: 800, position: 'relative' }}>
+            <Table>
+              <UserTableHead
+                order={table.order}
+                orderBy={table.orderBy}
+                rowCount={inFiltered.length}
+                numSelected={table.selected.length}
+                onSort={table.onSort}
+                onSelectAllRows={(checked) =>
+                  table.onSelectAllRows(
+                    checked,
+                    inFiltered.map((row) => row.id)
+                  )
+                }
+                headLabel={[]}
+              />
+              <TableBody>
+                {inFiltered
+                  .slice(
+                    table.page * table.rowsPerPage,
+                    table.page * table.rowsPerPage + table.rowsPerPage
+                  )
+                  .map((row) => (
+                    <UserTableRow
+                      key={row.id}
+                      row={row}
+                      selected={table.selected.includes(row.id)}
+                      onSelectRow={() => table.onSelectRow(row.id)}
+                    />
+                  ))}
+
+                <TableEmptyRows
+                  height={77}
+                  emptyRows={emptyRows(
+                    table.page,
+                    table.rowsPerPage,
+                    inFiltered.length
+                  )}
+                />
+
+                {inFiltered.length === 0 && (
+                  <TableNoData searchQuery={filterName} />
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Scrollbar>
+
+        <TablePagination
+          page={table.page}
+          component="div"
+          count={inFiltered.length}
+          rowsPerPage={table.rowsPerPage}
+          onPageChange={table.onChangePage}
+          rowsPerPageOptions={[5, 10, 25]}
+          onRowsPerPageChange={table.onChangeRowsPerPage}
+        />
+      </Card>
+    </DashboardContent>
+  );
 }
 
 // ----------------------------------------------------------------------
@@ -149,13 +217,16 @@ export function useTable() {
     [order, orderBy]
   );
 
-  const onSelectAllRows = useCallback((checked: boolean, newSelecteds: string[]) => {
-    if (checked) {
-      setSelected(newSelecteds);
-      return;
-    }
-    setSelected([]);
-  }, []);
+  const onSelectAllRows = useCallback(
+    (checked: boolean, newSelecteds: string[]) => {
+      if (checked) {
+        setSelected(newSelecteds);
+        return;
+      }
+      setSelected([]);
+    },
+    []
+  );
 
   const onSelectRow = useCallback(
     (inputValue: string) => {
