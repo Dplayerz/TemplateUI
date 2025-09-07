@@ -22,14 +22,15 @@ import type { UserProps } from '../user-table-row';
 // ----------------------------------------------------------------------
 
 export function UserView() {
-  const table = useTable();
 
+  const table = useTable();
   const [filterName, setFilterName] = useState('');
   const [users, setUsers] = useState<UserProps[]>([]);
+  const [workspaceId, setWorkspaceId] = useState('default'); // Replace 'default' with your initial workspace id
 
   useEffect(() => {
     const fetchUsers = () => {
-      fetch('http://localhost:8000/tools')
+      fetch(`http://localhost:8000/tools?workspace=${workspaceId}`)
         .then((res) => res.json())
         .then((data) => setUsers(data))
         .catch((err) => console.error('Fetch error:', err));
@@ -39,7 +40,9 @@ export function UserView() {
     const interval = setInterval(fetchUsers, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [workspaceId]);
+
+  // Call setWorkspaceId(newId) when workspace changes (e.g., from a dropdown or popover)
 
   // Split into IN and OUT
   const inFiltered = applyFilter({
